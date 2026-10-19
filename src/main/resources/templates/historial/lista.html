@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/layout :: head('Historial')}"></head>
+<body>
+<div class="app">
+    <aside th:replace="~{fragments/layout :: sidebar}"></aside>
+    <main class="contenido">
+        <header th:replace="~{fragments/layout :: topbar('Historial de producción y pagos')}"></header>
+        <div th:replace="~{fragments/layout :: alertas}"></div>
+
+        <div class="tarjeta mb-3">
+            <!-- RF-42 filtro por empleado, RF-43 filtro por fechas -->
+            <form th:action="@{/historial}" method="get" class="row g-2 align-items-end">
+                <div class="col-12 col-md-4 col-xl-3">
+                    <label for="empleadoId" class="form-label">Empleado</label>
+                    <select id="empleadoId" name="empleadoId" class="form-select" data-autoenviar>
+                        <option value="">Todos</option>
+                        <option th:each="e : ${empleados}" th:value="${e.id}" th:selected="${e.id == empleadoId}"
+                                th:text="${e.activo} ? ${e.nombre} : |${e.nombre} (inactivo)|"></option>
+                    </select>
+                </div>
+                <div class="col-12 col-md-2">
+                    <label for="tipo" class="form-label">Tipo</label>
+                    <select id="tipo" name="tipo" class="form-select" data-autoenviar>
+                        <option value="">Cortes y pagos</option>
+                        <option th:each="t : ${tipos}" th:value="${t}" th:selected="${t == tipo}" th:text="|Solo ${t.nombre.toLowerCase()}s|"></option>
+                    </select>
+                </div>
+                <div class="col-6 col-md-2">
+                    <label for="desde" class="form-label">Desde</label>
+                    <input type="date" id="desde" name="desde" th:value="${desde}" class="form-control">
+                </div>
+                <div class="col-6 col-md-2">
+                    <label for="hasta" class="form-label">Hasta</label>
+                    <input type="date" id="hasta" name="hasta" th:value="${hasta}" class="form-control">
+                </div>
+                <div class="col-12 col-md-2 col-xl-3 d-flex gap-2">
+                    <button type="submit" class="btn btn-outline-indigo flex-fill"><i class="bi bi-funnel"></i> Filtrar</button>
+                    <a th:href="@{/historial}" class="btn btn-outline-secondary" title="Limpiar filtros"><i class="bi bi-x-lg"></i></a>
+                </div>
+            </form>
+        </div>
+
+        <!-- RF-40, RF-41: línea de tiempo en orden cronológico descendente -->
+        <div class="tarjeta" th:if="${pagina != null}">
+            <div th:if="${pagina.content.isEmpty()}" class="vacio">
+                <i class="bi bi-clock-history d-block mb-2"></i> No hay movimientos con esos filtros.
+            </div>
+            <div class="table-responsive" th:unless="${pagina.content.isEmpty()}">
+                <table class="table table-hover tabla-judisa">
+                    <thead>
+                    <tr><th>Fecha</th><th>Tipo</th><th>Empleado</th><th>Detalle</th>
+                        <th class="text-end">Piezas</th><th class="text-end">Valor</th><th>Estado</th></tr>
+                    </thead>
+                    <tbody>
+                    <tr th:each="m : ${pagina.content}">
+                        <td th:text="${@fmt.fecha(m.fecha)}"></td>
+                        <td>
+                            <span th:if="${m.tipo.name() == 'CORTE'}" class="badge text-bg-light border"><i class="bi bi-scissors"></i> Corte</span>
+                            <span th:if="${m.tipo.name() == 'PAGO'}" class="badge badge-cobre"><i class="bi bi-cash-coin"></i> Pago</span>
+                        </td>
+                        <td><a th:href="@{/empleados/{id}(id=${m.empleadoId})}" th:text="${m.empleado}"></a></td>
+                        <td class="text-truncate" style="max-width: 260px" th:text="${m.detalle}" th:title="${m.detalle}"></td>
+                        <td class="text-end" th:text="${@fmt.numero(m.cantidad)}"></td>
+                        <td class="text-end fw-semibold" th:text="${@fmt.cop(m.valor)}"
+                            th:title="${m.tipo.name() == 'CORTE'} ? 'Valor de producción estimado' : 'Total del pago'"></td>
+                        <td>
+                            <span th:if="${m.estado != null}" class="badge"
+                                  th:classappend="${m.estado.name() == 'REALIZADO'} ? 'text-bg-success' : 'text-bg-warning'"
+                                  th:text="${m.estado.nombre}"></span>
+                        </td>
+                    </tr>
+                    </tbody>
+                </table>
+            </div>
+            <p class="text-muted small mb-0 mt-2">En los cortes, el valor es estimado: piezas × valor unitario actual de la referencia.</p>
+            <nav th:replace="~{fragments/layout :: paginacion(${pagina})}"></nav>
+        </div>
+    </main>
+</div>
+<th:block th:replace="~{fragments/layout :: scripts}"></th:block>
+</body>
+</html>

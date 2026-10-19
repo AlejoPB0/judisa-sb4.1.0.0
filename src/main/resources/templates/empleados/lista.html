@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/layout :: head('Empleados')}"></head>
+<body>
+<div class="app">
+    <aside th:replace="~{fragments/layout :: sidebar}"></aside>
+    <main class="contenido">
+        <header th:replace="~{fragments/layout :: topbar('Empleados')}"></header>
+        <div th:replace="~{fragments/layout :: alertas}"></div>
+
+        <div class="tarjeta">
+            <!-- RF-15 búsqueda, RF-16 filtro por tipo de trabajo -->
+            <form th:action="@{/empleados}" method="get" class="row g-2 align-items-end mb-3">
+                <div class="col-12 col-md-5">
+                    <label for="q" class="form-label">Buscar</label>
+                    <div class="input-group">
+                        <span class="input-group-text"><i class="bi bi-search"></i></span>
+                        <input type="search" id="q" name="q" th:value="${q}" class="form-control"
+                               placeholder="Nombre o documento">
+                    </div>
+                </div>
+                <div class="col-6 col-md-3">
+                    <label for="tipo" class="form-label">Tipo de trabajo</label>
+                    <select id="tipo" name="tipo" class="form-select" data-autoenviar>
+                        <option value="">Todos</option>
+                        <option th:each="t : ${tiposTrabajo}" th:value="${t}" th:text="${t.nombre}"
+                                th:selected="${t == tipo}"></option>
+                    </select>
+                </div>
+                <div class="col-6 col-md-2">
+                    <label for="activo" class="form-label">Estado</label>
+                    <select id="activo" name="activo" class="form-select" data-autoenviar>
+                        <option value="">Todos</option>
+                        <option value="true" th:selected="${activo == true}">Activos</option>
+                        <option value="false" th:selected="${activo == false}">Inactivos</option>
+                    </select>
+                </div>
+                <div class="col-12 col-md-2 d-grid">
+                    <button type="submit" class="btn btn-outline-indigo">Filtrar</button>
+                </div>
+            </form>
+
+            <div class="d-flex mb-3">
+                <a th:href="@{/empleados/nuevo}" class="btn btn-primary btn-lg-movil ms-auto">
+                    <i class="bi bi-person-plus me-1"></i> Nuevo empleado
+                </a>
+            </div>
+
+            <div th:if="${pagina.content.isEmpty()}" class="vacio">
+                <i class="bi bi-people d-block mb-2"></i>
+                No se encontraron empleados con esos criterios.
+            </div>
+
+            <!-- RF-11 listado paginado -->
+            <div class="table-responsive" th:unless="${pagina.content.isEmpty()}">
+                <table class="table table-hover tabla-judisa">
+                    <thead>
+                    <tr><th>Nombre</th><th class="d-none d-md-table-cell">Documento</th><th class="d-none d-lg-table-cell">Teléfono</th><th class="d-none d-sm-table-cell">Tipo de trabajo</th><th>Estado</th><th></th></tr>
+                    </thead>
+                    <tbody>
+                    <tr th:each="e : ${pagina.content}" th:classappend="${!e.activo} ? 'estado-inactivo'">
+                        <td><a th:href="@{/empleados/{id}(id=${e.id})}" th:text="${e.nombre}" class="fw-semibold"></a></td>
+                        <td class="d-none d-md-table-cell" th:text="${e.documento}"></td>
+                        <td class="d-none d-lg-table-cell" th:text="${e.telefono}"></td>
+                        <td class="d-none d-sm-table-cell" th:text="${e.tipoTrabajoNombre}"></td>
+                        <td>
+                            <span th:if="${e.activo}" class="badge text-bg-success">Activo</span>
+                            <span th:unless="${e.activo}" class="badge text-bg-secondary">Inactivo</span>
+                        </td>
+                        <td class="acciones">
+                            <a th:href="@{/empleados/{id}(id=${e.id})}" class="btn btn-sm btn-outline-indigo" title="Ver detalle"><i class="bi bi-eye"></i></a>
+                            <a th:href="@{/empleados/{id}/editar(id=${e.id})}" class="btn btn-sm btn-outline-indigo" title="Editar"><i class="bi bi-pencil"></i></a>
+                            <button type="button" class="btn btn-sm btn-outline-danger" title="Eliminar"
+                                    data-bs-toggle="modal" data-bs-target="#modalConfirmar"
+                                    th:attr="data-accion=@{/empleados/{id}/eliminar(id=${e.id})},data-mensaje=|¿Eliminar al empleado ${e.nombre}? Esta acción no se puede deshacer.|">
+                                <i class="bi bi-trash"></i>
+                            </button>
+                        </td>
+                    </tr>
+                    </tbody>
+                </table>
+            </div>
+            <nav th:replace="~{fragments/layout :: paginacion(${pagina})}"></nav>
+        </div>
+    </main>
+</div>
+<div th:replace="~{fragments/layout :: modalConfirmar}"></div>
+<th:block th:replace="~{fragments/layout :: scripts}"></th:block>
+</body>
+</html>

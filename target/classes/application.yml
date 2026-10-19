@@ -1,0 +1,141 @@
+# Configuración común. Los valores sensibles se leen de variables de entorno (ver .env.example).
+spring:
+  application:
+    name: judisa-backend
+  profiles:
+    default: dev
+  datasource:
+    url: ${DB_URL:jdbc:postgresql://localhost:5432/judisa}
+    username: ${DB_USERNAME:judisa}
+    password: ${DB_PASSWORD:}
+    hikari:
+      maximum-pool-size: 10
+  jpa:
+    open-in-view: false
+    hibernate:
+      ddl-auto: validate
+    properties:
+      hibernate:
+        jdbc:
+          time_zone: America/Bogota
+          batch_size: 50
+        order_inserts: true
+        default_batch_fetch_size: 50
+  flyway:
+    enabled: true
+    # {vendor} se resuelve a "postgresql" o "mysql" según la base de datos conectada
+    locations: classpath:db/migration/{vendor}
+  jackson:
+    time-zone: America/Bogota
+    # Jackson 3 ya escribe las fechas como texto ISO-8601 (2026-10-19), sin configuración adicional
+    default-property-inclusion: always
+  web:
+    locale: es_CO
+    locale-resolver: fixed
+  messages:
+    basename: messages
+    encoding: UTF-8
+  thymeleaf:
+    cache: true
+
+server:
+  port: ${PORT:8080}
+  servlet:
+    session:
+      timeout: 60m
+      cookie:
+        http-only: true
+        same-site: lax
+  error:
+    whitelabel:
+      enabled: false
+
+springdoc:
+  api-docs:
+    path: /v3/api-docs
+  swagger-ui:
+    path: /swagger-ui.html
+  paths-to-match: /api/**
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health
+
+judisa:
+  zona-horaria: America/Bogota
+  jwt:
+    # Clave HMAC en Base64 de al menos 256 bits. Generar con: openssl rand -base64 48
+    secret: ${JWT_SECRET:}
+    access-expiration: ${JWT_ACCESS_EXPIRATION:PT15M}
+    refresh-expiration: ${JWT_REFRESH_EXPIRATION:P7D}
+  cors:
+    allowed-origins: ${CORS_ALLOWED_ORIGINS:http://localhost:8080}
+  admin:
+    username: ${ADMIN_USERNAME:admin}
+    password: ${ADMIN_PASSWORD:}
+    nombre-completo: ${ADMIN_NOMBRE:Administradora Judisa}
+  seguridad:
+    max-intentos-fallidos: 5
+    duracion-bloqueo: PT15M
+
+---
+# Perfil de desarrollo: datos de demostración y valores por defecto cómodos para trabajar en local.
+spring:
+  config:
+    activate:
+      on-profile: dev
+  datasource:
+    password: ${DB_PASSWORD:judisa}
+  flyway:
+    locations: classpath:db/migration/{vendor},classpath:db/dev/{vendor}
+  thymeleaf:
+    cache: false
+
+judisa:
+  jwt:
+    # Solo para desarrollo local. En producción JWT_SECRET es obligatoria.
+    secret: ${JWT_SECRET:ZGV2LXNvbG8tcGFyYS1kZXNhcnJvbGxvLWp1ZGlzYS1qZWFuLWN1Y3V0YS0yMDI2LWNsYXZlLWxhcmdh}
+  admin:
+    password: ${ADMIN_PASSWORD:Judisa2026}
+  cors:
+    allowed-origins: ${CORS_ALLOWED_ORIGINS:http://localhost:8080,http://10.0.2.2:8080}
+
+logging:
+  level:
+    co.judisa: DEBUG
+
+---
+# Perfil de producción: sin datos demo; todo lo sensible debe venir del entorno.
+spring:
+  config:
+    activate:
+      on-profile: prod
+  thymeleaf:
+    cache: true
+
+server:
+  servlet:
+    session:
+      cookie:
+        secure: ${COOKIE_SECURE:true}
+
+springdoc:
+  swagger-ui:
+    enabled: ${SWAGGER_ENABLED:false}
+  api-docs:
+    enabled: ${SWAGGER_ENABLED:false}
+
+logging:
+  level:
+    co.judisa: INFO
+
+---
+# Perfil alternativo MySQL 8. Se combina con dev o prod: SPRING_PROFILES_ACTIVE=dev,mysql
+spring:
+  config:
+    activate:
+      on-profile: mysql
+  datasource:
+    url: ${DB_URL:jdbc:mysql://localhost:3306/judisa?serverTimezone=America/Bogota&useUnicode=true&characterEncoding=utf8}

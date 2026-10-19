@@ -1,0 +1,9 @@
+# Perfil de pruebas: sin datos demo; la base la provee Testcontainers (o TEST_DB_URL, ver IntegracionTestBase).
+judisa:
+  jwt:
+    secret: dGVzdC1zb2xvLXBhcmEtcHJ1ZWJhcy1hdXRvbWF0aWNhcy1kZS1qdWRpc2EtY2xhdmUtMzItYnl0ZXM=
+  admin:
+    username: admin
+    password: ClaveInicial123
+  cors:
+    allowed-origins: http://localhost:8080

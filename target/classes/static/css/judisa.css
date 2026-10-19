@@ -1,0 +1,390 @@
+/* Identidad visual Judisa: índigo del jean con acentos de costura cobre. */
+:root {
+    --j-indigo: #1F3A68;
+    --j-indigo-oscuro: #142847;
+    --j-indigo-claro: #E7ECF5;
+    --j-cobre: #B87333;
+    --j-cobre-claro: #F6EADF;
+    --j-fondo: #F5F6FA;
+    --j-texto: #1E2430;
+    --j-error: #B3261E;
+    --bs-primary: #1F3A68;
+    --bs-primary-rgb: 31, 58, 104;
+    --bs-body-color: #1E2430;
+    --bs-body-bg: #F5F6FA;
+    --bs-link-color: #1F3A68;
+    --bs-link-hover-color: #142847;
+    --bs-link-color-rgb: 31, 58, 104;
+    --bs-danger: #B3261E;
+}
+
+body {
+    background: var(--j-fondo);
+    color: var(--j-texto);
+    font-size: 1rem;
+}
+
+.btn-primary {
+    --bs-btn-bg: var(--j-indigo);
+    --bs-btn-border-color: var(--j-indigo);
+    --bs-btn-hover-bg: var(--j-indigo-oscuro);
+    --bs-btn-hover-border-color: var(--j-indigo-oscuro);
+    --bs-btn-active-bg: var(--j-indigo-oscuro);
+    --bs-btn-disabled-bg: var(--j-indigo);
+}
+
+.btn-outline-indigo {
+    --bs-btn-color: var(--j-indigo);
+    --bs-btn-border-color: var(--j-indigo);
+    --bs-btn-hover-bg: var(--j-indigo);
+    --bs-btn-hover-color: #fff;
+    --bs-btn-active-bg: var(--j-indigo-oscuro);
+    --bs-btn-active-color: #fff;
+}
+
+.btn-cobre {
+    --bs-btn-bg: var(--j-cobre);
+    --bs-btn-color: #fff;
+    --bs-btn-border-color: var(--j-cobre);
+    --bs-btn-hover-bg: #9c5f28;
+    --bs-btn-hover-color: #fff;
+    --bs-btn-hover-border-color: #9c5f28;
+}
+
+.form-control:focus, .form-select:focus {
+    border-color: var(--j-indigo);
+    box-shadow: 0 0 0 .2rem rgba(31, 58, 104, .2);
+}
+
+.pagination {
+    --bs-pagination-color: var(--j-indigo);
+    --bs-pagination-active-bg: var(--j-indigo);
+    --bs-pagination-active-border-color: var(--j-indigo);
+}
+
+/* ---------- Estructura ---------- */
+.app {
+    display: flex;
+    min-height: 100vh;
+}
+
+.sidebar {
+    width: 260px;
+    flex-shrink: 0;
+    /* !important: Bootstrap deja transparente el fondo de .offcanvas-lg en escritorio */
+    background: var(--j-indigo) !important;
+    color: #fff;
+    /* Costura: línea punteada cobre en el borde */
+    border-right: 3px dashed var(--j-cobre);
+}
+
+@media (min-width: 992px) {
+    .sidebar {
+        position: sticky;
+        top: 0;
+        height: 100vh;
+        overflow-y: auto;
+    }
+}
+
+@media (max-width: 991.98px) {
+    .sidebar.offcanvas-lg {
+        --bs-offcanvas-bg: var(--j-indigo);
+        --bs-offcanvas-color: #fff;
+        --bs-offcanvas-width: 280px;
+    }
+}
+
+.sidebar-marca {
+    display: flex;
+    align-items: center;
+    gap: .75rem;
+    padding: 1.25rem 1.25rem 1rem;
+    border-bottom: 1px solid rgba(255, 255, 255, .12);
+}
+
+.sidebar-marca strong {
+    display: block;
+    font-size: 1.25rem;
+    letter-spacing: .02em;
+}
+
+.sidebar-marca small {
+    color: #cbd5e8;
+}
+
+.sidebar-nav {
+    display: flex;
+    flex-direction: column;
+    padding: .75rem;
+    gap: .15rem;
+    width: 100%;
+}
+
+.sidebar-nav a, .sidebar-nav button {
+    display: flex;
+    align-items: center;
+    gap: .7rem;
+    padding: .7rem .9rem;
+    border-radius: .6rem;
+    color: #e3e9f4;
+    text-decoration: none;
+    background: none;
+    border: 0;
+    width: 100%;
+    text-align: left;
+    font-size: 1rem;
+}
+
+.sidebar-nav a:hover, .sidebar-nav button:hover {
+    background: rgba(255, 255, 255, .08);
+    color: #fff;
+}
+
+.sidebar-nav a.activo {
+    background: #fff;
+    color: var(--j-indigo);
+    font-weight: 600;
+}
+
+.sidebar-nav i {
+    font-size: 1.15rem;
+}
+
+.sidebar-nav hr {
+    border-color: rgba(255, 255, 255, .25);
+    margin: .5rem 0;
+}
+
+.pronto {
+    margin-left: auto;
+    font-size: .7rem;
+    padding: .1rem .45rem;
+    border-radius: 1rem;
+    background: var(--j-cobre);
+    color: #fff;
+}
+
+.contenido {
+    flex: 1;
+    min-width: 0;
+    padding: 1.25rem 1.5rem 2rem;
+}
+
+@media (max-width: 575.98px) {
+    .contenido {
+        padding: 1rem .85rem 2rem;
+    }
+}
+
+.topbar {
+    display: flex;
+    align-items: center;
+    gap: .75rem;
+    margin-bottom: 1.25rem;
+}
+
+.topbar h1 {
+    font-size: 1.6rem;
+    margin: 0;
+    color: var(--j-indigo-oscuro);
+    font-weight: 700;
+}
+
+.topbar .usuario {
+    color: #5b6476;
+    white-space: nowrap;
+}
+
+/* ---------- Tarjetas ---------- */
+.tarjeta {
+    background: #fff;
+    border-radius: .9rem;
+    box-shadow: 0 1px 3px rgba(20, 40, 71, .08);
+    padding: 1.25rem;
+}
+
+.tarjeta-costura {
+    border: 2px dashed var(--j-cobre);
+}
+
+.indicador {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+}
+
+.indicador .icono {
+    width: 52px;
+    height: 52px;
+    border-radius: .8rem;
+    display: grid;
+    place-items: center;
+    font-size: 1.5rem;
+    background: var(--j-indigo-claro);
+    color: var(--j-indigo);
+    flex-shrink: 0;
+}
+
+.indicador .icono.cobre {
+    background: var(--j-cobre-claro);
+    color: var(--j-cobre);
+}
+
+.indicador .valor {
+    font-size: 1.7rem;
+    font-weight: 700;
+    line-height: 1.1;
+    color: var(--j-indigo-oscuro);
+}
+
+.indicador .etiqueta {
+    color: #5b6476;
+}
+
+.acceso {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: .4rem;
+    min-height: 110px;
+    text-decoration: none;
+    color: var(--j-indigo);
+    font-weight: 600;
+    transition: transform .1s ease, box-shadow .1s ease;
+}
+
+.acceso i {
+    font-size: 2rem;
+}
+
+.acceso:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(20, 40, 71, .14);
+    color: var(--j-indigo-oscuro);
+}
+
+/* ---------- Tablas ---------- */
+.tabla-judisa {
+    margin-bottom: 0;
+}
+
+.tabla-judisa thead th {
+    background: var(--j-indigo-claro);
+    color: var(--j-indigo-oscuro);
+    font-weight: 600;
+    white-space: nowrap;
+    border-bottom: 0;
+}
+
+.tabla-judisa td {
+    vertical-align: middle;
+}
+
+.acciones {
+    white-space: nowrap;
+    text-align: right;
+}
+
+.estado-inactivo {
+    color: #8a93a6;
+}
+
+.vacio {
+    text-align: center;
+    padding: 2.5rem 1rem;
+    color: #5b6476;
+}
+
+.vacio i {
+    font-size: 2.5rem;
+    color: var(--j-cobre);
+}
+
+/* ---------- Formularios ---------- */
+.form-label {
+    font-weight: 600;
+}
+
+.btn-lg-movil {
+    min-height: 48px;
+}
+
+/* ---------- Login ---------- */
+.pantalla-login {
+    min-height: 100vh;
+    display: grid;
+    place-items: center;
+    padding: 1rem;
+    background: linear-gradient(160deg, var(--j-indigo) 0%, var(--j-indigo-oscuro) 100%);
+}
+
+.caja-login {
+    width: 100%;
+    max-width: 420px;
+    background: #fff;
+    border-radius: 1rem;
+    padding: 2rem;
+    outline: 2px dashed var(--j-cobre);
+    outline-offset: -10px;
+}
+
+.caja-login h1 {
+    font-size: 1.5rem;
+    color: var(--j-indigo-oscuro);
+}
+
+/* Sprint 3: pagos, historial, reportes y gráficos del panel */
+.text-cobre {
+    color: var(--j-cobre);
+}
+
+.badge-cobre {
+    background: var(--j-cobre-claro);
+    color: #7A4A1E;
+}
+
+.alerta-pendientes {
+    display: flex;
+    align-items: center;
+    gap: .75rem;
+    border-left: 5px solid var(--j-cobre);
+    background: var(--j-cobre-claro);
+    color: #5C3613;
+}
+
+.alerta-pendientes a {
+    color: inherit;
+    font-weight: 600;
+}
+
+.grafico {
+    position: relative;
+    height: 260px;
+}
+
+.btn-check + .btn-outline-indigo {
+    background: #fff;
+    color: var(--j-indigo);
+    border-color: var(--j-indigo);
+    opacity: 1;
+}
+
+.btn-check:checked + .btn-outline-indigo {
+    background: var(--j-indigo);
+    color: #fff;
+    border-color: var(--j-indigo);
+}
+
+/* En celulares, el título largo de la barra superior no debe desbordar la pantalla */
+.topbar h1 {
+    min-width: 0;
+    overflow-wrap: anywhere;
+}
+
+@media (max-width: 575.98px) {
+    .topbar .usuario {
+        display: none;
+    }
+}

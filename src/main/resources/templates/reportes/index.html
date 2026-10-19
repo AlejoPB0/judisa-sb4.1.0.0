@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/layout :: head('Reportes')}"></head>
+<body>
+<div class="app">
+    <aside th:replace="~{fragments/layout :: sidebar}"></aside>
+    <main class="contenido">
+        <header th:replace="~{fragments/layout :: topbar('Reportes')}"></header>
+        <div th:replace="~{fragments/layout :: alertas}"></div>
+
+        <div class="tarjeta mb-3">
+            <form th:action="@{/reportes}" method="get" class="row g-2 align-items-end">
+                <div class="col-6 col-md-3">
+                    <label for="desde" class="form-label">Desde</label>
+                    <input type="date" id="desde" name="desde" th:value="${desde}" class="form-control">
+                </div>
+                <div class="col-6 col-md-3">
+                    <label for="hasta" class="form-label">Hasta</label>
+                    <input type="date" id="hasta" name="hasta" th:value="${hasta}" class="form-control">
+                </div>
+                <div class="col-12 col-md-4">
+                    <label for="empleadoId" class="form-label">Empleado</label>
+                    <select id="empleadoId" name="empleadoId" class="form-select">
+                        <option value="">Todos</option>
+                        <option th:each="e : ${empleados}" th:value="${e.id}" th:selected="${e.id == empleadoId}"
+                                th:text="${e.activo} ? ${e.nombre} : |${e.nombre} (inactivo)|"></option>
+                    </select>
+                </div>
+                <div class="col-12 col-md-2 d-flex gap-2">
+                    <button type="submit" class="btn btn-primary flex-fill"><i class="bi bi-eye"></i> Ver</button>
+                    <a th:href="@{/reportes}" class="btn btn-outline-secondary" title="Mes en curso"><i class="bi bi-x-lg"></i></a>
+                </div>
+            </form>
+        </div>
+
+        <th:block th:if="${reporte != null}">
+            <div class="d-flex flex-wrap align-items-center gap-2 mb-3">
+                <h2 class="h5 mb-0">
+                    Del <span th:text="${@fmt.fecha(reporte.desde)}"></span> al <span th:text="${@fmt.fecha(reporte.hasta)}"></span>
+                    <span th:if="${reporte.empleadoNombre}" th:text="|· ${reporte.empleadoNombre}|"></span>
+                </h2>
+                <!-- RF-46: descargas -->
+                <div class="ms-auto d-flex gap-2">
+                    <a class="btn btn-outline-danger" th:href="@{/reportes/descargar(desde=${reporte.desde},hasta=${reporte.hasta},empleadoId=${reporte.empleadoId},formato='pdf')}">
+                        <i class="bi bi-file-earmark-pdf"></i> Descargar PDF</a>
+                    <a class="btn btn-outline-success" th:href="@{/reportes/descargar(desde=${reporte.desde},hasta=${reporte.hasta},empleadoId=${reporte.empleadoId},formato='xlsx')}">
+                        <i class="bi bi-file-earmark-excel"></i> Descargar Excel</a>
+                </div>
+            </div>
+
+            <!-- RF-44, RF-47 -->
+            <div class="row g-3 mb-3">
+                <div class="col-sm-6 col-xl-3">
+                    <div class="tarjeta indicador"><div class="icono"><i class="bi bi-boxes"></i></div>
+                        <div><div class="valor" th:text="${@fmt.numero(reporte.totalPiezas)}">0</div><div class="etiqueta">Piezas cortadas</div></div></div>
+                </div>
+                <div class="col-sm-6 col-xl-3">
+                    <div class="tarjeta indicador"><div class="icono"><i class="bi bi-graph-up"></i></div>
+                        <div><div class="valor" th:text="${@fmt.cop(reporte.valorProducido)}">$ 0</div><div class="etiqueta">Valor producido</div></div></div>
+                </div>
+                <div class="col-sm-6 col-xl-3">
+                    <div class="tarjeta indicador"><div class="icono"><i class="bi bi-check2-circle"></i></div>
+                        <div><div class="valor" th:text="${@fmt.cop(reporte.totalPagado)}">$ 0</div><div class="etiqueta">Pagado</div></div></div>
+                </div>
+                <div class="col-sm-6 col-xl-3">
+                    <div class="tarjeta indicador tarjeta-costura"><div class="icono cobre"><i class="bi bi-hourglass-split"></i></div>
+                        <div><div class="valor" th:text="${@fmt.cop(reporte.totalPendiente)}">$ 0</div><div class="etiqueta">Pagos pendientes</div></div></div>
+                </div>
+            </div>
+
+            <div class="tarjeta mb-3">
+                <h3 class="h6 mb-3">Producción y pagos por empleado</h3>
+                <div th:if="${reporte.porEmpleado.isEmpty()}" class="vacio">No hay movimientos en este periodo.</div>
+                <div class="table-responsive" th:unless="${reporte.porEmpleado.isEmpty()}">
+                    <table class="table tabla-judisa">
+                        <thead><tr><th>Empleado</th><th class="text-end">Piezas</th><th class="text-end">Valor producido</th>
+                            <th class="text-end">Pagado</th><th class="text-end">Pendiente</th></tr></thead>
+                        <tbody>
+                        <tr th:each="f : ${reporte.porEmpleado}">
+                            <td><a th:href="@{/empleados/{id}(id=${f.empleadoId})}" th:text="${f.empleado}"></a></td>
+                            <td class="text-end" th:text="${@fmt.numero(f.piezas)}"></td>
+                            <td class="text-end" th:text="${@fmt.cop(f.valorProducido)}"></td>
+                            <td class="text-end" th:text="${@fmt.cop(f.totalPagado)}"></td>
+                            <td class="text-end" th:text="${@fmt.cop(f.totalPendiente)}"></td>
+                        </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- RF-45 -->
+            <div class="tarjeta">
+                <h3 class="h6 mb-3">Piezas por empleado y referencia</h3>
+                <div th:if="${reporte.porEmpleadoReferencia.isEmpty()}" class="vacio">No hay cortes en este periodo.</div>
+                <div class="table-responsive" th:unless="${reporte.porEmpleadoReferencia.isEmpty()}">
+                    <table class="table tabla-judisa">
+                        <thead><tr><th>Empleado</th><th>Referencia</th><th class="d-none d-md-table-cell">Descripción</th>
+                            <th class="text-end">Piezas</th><th class="text-end">Valor producido</th></tr></thead>
+                        <tbody>
+                        <tr th:each="f : ${reporte.porEmpleadoReferencia}">
+                            <td th:text="${f.empleado}"></td>
+                            <td class="fw-semibold" th:text="${f.referenciaCodigo}"></td>
+                            <td class="d-none d-md-table-cell" th:text="${f.referenciaDescripcion}"></td>
+                            <td class="text-end" th:text="${@fmt.numero(f.piezas)}"></td>
+                            <td class="text-end" th:text="${@fmt.cop(f.valorProducido)}"></td>
+                        </tr>
+                        </tbody>
+                    </table>
+                </div>
+                <p class="text-muted small mb-0">El valor producido usa el valor unitario actual de cada referencia.</p>
+            </div>
+        </th:block>
+    </main>
+</div>
+<th:block th:replace="~{fragments/layout :: scripts}"></th:block>
+</body>
+</html>

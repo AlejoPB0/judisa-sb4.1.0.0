@@ -1,0 +1,23 @@
+# Compilación de Maven
+target/
+
+# Variables con claves (nunca se suben)
+.env
+*.env
+
+# Editores
+.idea/
+*.iml
+.vscode/
+.settings/
+.project
+.classpath
+.factorypath
+
+# Respaldos de la base de datos
+respaldos/
+*.dump
+
+# Sistema operativo
+.DS_Store
+Thumbs.db

@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/layout :: head('Panel')}"></head>
+<body>
+<div class="app">
+    <aside th:replace="~{fragments/layout :: sidebar}"></aside>
+    <main class="contenido">
+        <header th:replace="~{fragments/layout :: topbar('Panel')}"></header>
+        <div th:replace="~{fragments/layout :: alertas}"></div>
+
+        <!-- RF-52: alerta de pagos pendientes -->
+        <div class="tarjeta alerta-pendientes mb-3" th:if="${resumen.pagosPendientesCantidad > 0}" role="alert">
+            <i class="bi bi-bell-fill fs-4"></i>
+            <div>
+                Hay <strong th:text="${resumen.pagosPendientesCantidad}">0</strong>
+                <span th:text="${resumen.pagosPendientesCantidad == 1} ? 'pago pendiente' : 'pagos pendientes'"></span>
+                por <strong th:text="${@fmt.cop(resumen.pagosPendientesMonto)}">$ 0</strong>.
+                <a th:href="@{/pagos(estado='PENDIENTE')}">Revisar pagos pendientes</a>
+            </div>
+        </div>
+
+        <!-- RF-50, RF-51 -->
+        <div class="row g-3 mb-4">
+            <div class="col-sm-6 col-xl-3">
+                <div class="tarjeta indicador">
+                    <div class="icono"><i class="bi bi-people"></i></div>
+                    <div><div class="valor" th:text="${@fmt.numero(resumen.totalEmpleadosActivos)}">0</div>
+                        <div class="etiqueta">Empleados activos</div></div>
+                </div>
+            </div>
+            <div class="col-sm-6 col-xl-3">
+                <div class="tarjeta indicador">
+                    <div class="icono"><i class="bi bi-scissors"></i></div>
+                    <div><div class="valor" th:text="${@fmt.numero(resumen.totalCortes)}">0</div>
+                        <div class="etiqueta">Cortes registrados ·
+                            <span th:text="${@fmt.numero(resumen.totalReferenciasActivas)}">0</span> referencias activas</div></div>
+                </div>
+            </div>
+            <div class="col-sm-6 col-xl-3">
+                <div class="tarjeta indicador tarjeta-costura">
+                    <div class="icono cobre"><i class="bi bi-boxes"></i></div>
+                    <div><div class="valor" th:text="${@fmt.numero(resumen.piezasMesActual)}">0</div>
+                        <div class="etiqueta">Piezas cortadas este mes
+                            (<span th:text="${resumen.cortesMesActual}">0</span> cortes)</div></div>
+                </div>
+            </div>
+            <div class="col-sm-6 col-xl-3">
+                <div class="tarjeta indicador">
+                    <div class="icono cobre"><i class="bi bi-cash-coin"></i></div>
+                    <div><div class="valor" th:text="${@fmt.cop(resumen.pagadoMesActual)}">$ 0</div>
+                        <div class="etiqueta">Pagado este mes</div></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Gráficos: piezas por semana y pagos por empleado del mes -->
+        <div class="row g-3 mb-4">
+            <div class="col-lg-7">
+                <div class="tarjeta h-100">
+                    <h2 class="h6 mb-3">Piezas cortadas por semana (mes en curso)</h2>
+                    <div class="grafico"><canvas id="graficoPiezas" aria-label="Piezas cortadas por semana" role="img"></canvas></div>
+                </div>
+            </div>
+            <div class="col-lg-5">
+                <div class="tarjeta h-100">
+                    <h2 class="h6 mb-3">Pagos realizados por empleado (mes en curso)</h2>
+                    <div th:if="${#lists.isEmpty(resumen.pagosPorEmpleado)}" class="vacio">Aún no hay pagos realizados este mes.</div>
+                    <div class="grafico" th:unless="${#lists.isEmpty(resumen.pagosPorEmpleado)}">
+                        <canvas id="graficoPagos" aria-label="Pagos por empleado" role="img"></canvas></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- RF-49: accesos directos -->
+        <h2 class="h5 mb-3">Accesos directos</h2>
+        <div class="row g-3 mb-4">
+            <div class="col-6 col-md-3"><a th:href="@{/cortes/nuevo}" class="tarjeta acceso"><i class="bi bi-plus-circle"></i> Registrar corte</a></div>
+            <div class="col-6 col-md-3"><a th:href="@{/pagos/nuevo}" class="tarjeta acceso"><i class="bi bi-cash-coin"></i> Registrar pago</a></div>
+            <div class="col-6 col-md-3"><a th:href="@{/empleados/nuevo}" class="tarjeta acceso"><i class="bi bi-person-plus"></i> Nuevo empleado</a></div>
+            <div class="col-6 col-md-3"><a th:href="@{/reportes}" class="tarjeta acceso"><i class="bi bi-file-earmark-bar-graph"></i> Reportes</a></div>
+        </div>
+
+        <div class="tarjeta">
+            <div class="d-flex align-items-center mb-3">
+                <h2 class="h5 mb-0">Últimos cortes</h2>
+                <a th:href="@{/cortes}" class="ms-auto">Ver todos</a>
+            </div>
+            <div th:if="${#lists.isEmpty(ultimosCortes)}" class="vacio">
+                <i class="bi bi-scissors d-block mb-2"></i> Aún no hay cortes registrados.
+            </div>
+            <div class="table-responsive" th:unless="${#lists.isEmpty(ultimosCortes)}">
+                <table class="table tabla-judisa">
+                    <thead><tr><th>Fecha</th><th>Referencia</th><th>Empleado</th><th class="text-end">Piezas</th></tr></thead>
+                    <tbody>
+                    <tr th:each="c : ${ultimosCortes}">
+                        <td th:text="${@fmt.fecha(c.fecha)}"></td>
+                        <td th:text="${c.referenciaCodigo}"></td>
+                        <td th:text="${c.empleadoNombre}"></td>
+                        <td class="text-end" th:text="${@fmt.numero(c.cantidad)}"></td>
+                    </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </main>
+</div>
+<th:block th:replace="~{fragments/layout :: scripts}"></th:block>
+<script th:src="@{/webjars/chart.js/dist/chart.umd.min.js}"></script>
+<script th:inline="javascript">
+    const semanas = /*[[${resumen.piezasPorSemana}]]*/ [];
+    const pagos = /*[[${resumen.pagosPorEmpleado}]]*/ [];
+    const pesos = new Intl.NumberFormat('es-CO', { maximumFractionDigits: 0 });
+    Chart.defaults.font.family = getComputedStyle(document.body).fontFamily;
+    new Chart(document.getElementById('graficoPiezas'), {
+        type: 'bar',
+        data: {
+            labels: semanas.map(s => s.etiqueta),
+            datasets: [{ label: 'Piezas', data: semanas.map(s => s.piezas), backgroundColor: '#1F3A68', borderRadius: 6 }]
+        },
+        options: { maintainAspectRatio: false, plugins: { legend: { display: false } },
+                   scales: { y: { beginAtZero: true, ticks: { precision: 0 } } } }
+    });
+    const lienzoPagos = document.getElementById('graficoPagos');
+    if (lienzoPagos) {
+        new Chart(lienzoPagos, {
+            type: 'bar',
+            data: {
+                labels: pagos.map(p => p.empleado),
+                datasets: [{ label: 'Pagado', data: pagos.map(p => p.total), backgroundColor: '#B87333', borderRadius: 6 }]
+            },
+            options: { indexAxis: 'y', maintainAspectRatio: false, plugins: { legend: { display: false },
+                       tooltip: { callbacks: { label: c => '$ ' + pesos.format(c.parsed.x) } } },
+                       scales: { x: { beginAtZero: true, ticks: { callback: v => '$ ' + pesos.format(v) } } } }
+        });
+    }
+</script>
+</body>
+</html>

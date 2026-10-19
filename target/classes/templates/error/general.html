@@ -1,0 +1,18 @@
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/layout :: head('Error')}"></head>
+<body>
+<div class="app">
+    <aside th:replace="~{fragments/layout :: sidebar}"></aside>
+    <main class="contenido">
+        <header th:replace="~{fragments/layout :: topbar(${tituloError})}"></header>
+        <div class="tarjeta vacio">
+            <i class="bi bi-exclamation-octagon d-block mb-2"></i>
+            <p th:text="${mensajeError}">Ocurrió un error.</p>
+            <a th:href="@{/}" class="btn btn-primary btn-lg">Volver al panel</a>
+        </div>
+    </main>
+</div>
+<th:block th:replace="~{fragments/layout :: scripts}"></th:block>
+</body>
+</html>

@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<head th:fragment="head(titulo)">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="_csrf" th:content="${_csrf?.token}">
+    <title th:text="${titulo} + ' · Judisa'">Judisa</title>
+    <link rel="icon" th:href="@{/img/logo.svg}" type="image/svg+xml">
+    <link rel="stylesheet" th:href="@{/webjars/bootstrap/css/bootstrap.min.css}">
+    <link rel="stylesheet" th:href="@{/webjars/bootstrap-icons/font/bootstrap-icons.min.css}">
+    <link rel="stylesheet" th:href="@{/css/judisa.css}">
+</head>
+<body>
+
+<!-- Barra lateral: fija en escritorio, panel deslizable en celulares -->
+<aside th:fragment="sidebar" class="sidebar offcanvas-lg offcanvas-start" tabindex="-1" id="menuLateral">
+    <div class="sidebar-marca">
+        <img th:src="@{/img/logo.svg}" alt="" width="36" height="36">
+        <div>
+            <strong>Judisa</strong>
+            <small>Taller Satélite Jean</small>
+        </div>
+        <button type="button" class="btn-close btn-close-white d-lg-none ms-auto" data-bs-dismiss="offcanvas"
+                data-bs-target="#menuLateral" aria-label="Cerrar menú"></button>
+    </div>
+    <nav class="sidebar-nav">
+        <a th:href="@{/}" th:classappend="${menu == null or menu == 'panel'} ? 'activo'"><i class="bi bi-speedometer2"></i> Panel</a>
+        <a th:href="@{/empleados}" th:classappend="${menu == 'empleados'} ? 'activo'"><i class="bi bi-people"></i> Empleados</a>
+        <a th:href="@{/referencias}" th:classappend="${menu == 'referencias'} ? 'activo'"><i class="bi bi-tags"></i> Referencias</a>
+        <a th:href="@{/cortes}" th:classappend="${menu == 'cortes'} ? 'activo'"><i class="bi bi-scissors"></i> Cortes</a>
+        <a th:href="@{/pagos}" th:classappend="${menu == 'pagos'} ? 'activo'"><i class="bi bi-cash-coin"></i> Pagos</a>
+        <a th:href="@{/historial}" th:classappend="${menu == 'historial'} ? 'activo'"><i class="bi bi-clock-history"></i> Historial</a>
+        <a th:href="@{/reportes}" th:classappend="${menu == 'reportes'} ? 'activo'"><i class="bi bi-file-earmark-bar-graph"></i> Reportes</a>
+        <hr>
+        <a th:href="@{/cuenta/password}" th:classappend="${menu == 'password'} ? 'activo'"><i class="bi bi-key"></i> Cambiar contraseña</a>
+        <form th:action="@{/logout}" method="post">
+            <button type="submit"><i class="bi bi-box-arrow-left"></i> Cerrar sesión</button>
+        </form>
+    </nav>
+</aside>
+
+<header th:fragment="topbar(titulo)" class="topbar">
+    <button class="btn btn-outline-indigo d-lg-none" type="button" data-bs-toggle="offcanvas"
+            data-bs-target="#menuLateral" aria-controls="menuLateral" aria-label="Abrir menú">
+        <i class="bi bi-list"></i>
+    </button>
+    <h1 th:text="${titulo}">Título</h1>
+    <span class="usuario ms-auto" sec:authorize="isAuthenticated()">
+        <i class="bi bi-person-circle"></i>
+        <span sec:authentication="principal.nombreCompleto">Administradora</span>
+    </span>
+</header>
+
+<div th:fragment="alertas">
+    <div th:if="${exito}" class="alert alert-success alert-dismissible fade show" role="alert">
+        <i class="bi bi-check-circle-fill me-1"></i> <span th:text="${exito}"></span>
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Cerrar"></button>
+    </div>
+    <div th:if="${error}" class="alert alert-danger fade show" role="alert">
+        <i class="bi bi-exclamation-triangle-fill me-1"></i> <span th:text="${error}"></span>
+    </div>
+</div>
+
+<!-- Paginación que conserva los filtros actuales -->
+<nav th:fragment="paginacion(pagina)" th:if="${pagina.totalPages > 1}" aria-label="Paginación"
+     class="d-flex flex-wrap align-items-center justify-content-between gap-2 mt-3">
+    <small class="text-muted"
+           th:text="|Página ${pagina.page + 1} de ${pagina.totalPages} · ${pagina.totalElements} registros|"></small>
+    <ul class="pagination mb-0">
+        <li class="page-item" th:classappend="${pagina.first} ? 'disabled'">
+            <a class="page-link" th:href="${enlaces.con('page', pagina.page - 1)}">Anterior</a>
+        </li>
+        <li class="page-item" th:each="n : ${#numbers.sequence(pagina.page > 2 ? pagina.page - 2 : 0, pagina.page + 2 < pagina.totalPages ? pagina.page + 2 : pagina.totalPages - 1)}"
+            th:classappend="${n == pagina.page} ? 'active'">
+            <a class="page-link" th:href="${enlaces.con('page', n)}" th:text="${n + 1}">1</a>
+        </li>
+        <li class="page-item" th:classappend="${pagina.last} ? 'disabled'">
+            <a class="page-link" th:href="${enlaces.con('page', pagina.page + 1)}">Siguiente</a>
+        </li>
+    </ul>
+</nav>
+
+<!-- Modal único de confirmación: los botones con data-accion definen a dónde se envía -->
+<div th:fragment="modalConfirmar" class="modal fade" id="modalConfirmar" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <form class="modal-content" method="post" th:action="@{/}">
+            <div class="modal-header">
+                <h5 class="modal-title"><i class="bi bi-exclamation-triangle text-danger me-1"></i> Confirmar</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+            </div>
+            <div class="modal-body"><p class="mb-0" data-mensaje>¿Seguro?</p></div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-outline-secondary btn-lg" data-bs-dismiss="modal">Cancelar</button>
+                <button type="submit" class="btn btn-danger btn-lg" data-boton>Eliminar</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<th:block th:fragment="scripts">
+    <script th:src="@{/webjars/bootstrap/js/bootstrap.bundle.min.js}"></script>
+    <script th:src="@{/js/judisa.js}"></script>
+</th:block>
+</body>
+</html>

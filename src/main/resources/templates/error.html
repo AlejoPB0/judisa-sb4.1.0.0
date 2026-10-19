@@ -1,0 +1,13 @@
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/layout :: head('Error')}"></head>
+<body>
+<main class="pantalla-login">
+    <div class="caja-login text-center">
+        <h1 th:text="${status == 404} ? 'Página no encontrada' : 'Algo salió mal'">Error</h1>
+        <p class="text-muted" th:text="${status == 404} ? 'La dirección que buscó no existe.' : 'Ocurrió un error inesperado. Intente de nuevo.'"></p>
+        <a th:href="@{/}" class="btn btn-primary btn-lg">Ir al panel</a>
+    </div>
+</main>
+</body>
+</html>

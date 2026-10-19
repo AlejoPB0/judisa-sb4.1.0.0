@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/layout :: head('Referencias')}"></head>
+<body>
+<div class="app">
+    <aside th:replace="~{fragments/layout :: sidebar}"></aside>
+    <main class="contenido">
+        <header th:replace="~{fragments/layout :: topbar('Referencias')}"></header>
+        <div th:replace="~{fragments/layout :: alertas}"></div>
+
+        <div th:if="${ofrecerDesactivar != null}" class="alert alert-warning d-flex flex-wrap align-items-center gap-2">
+            <span>¿Desea desactivarla? Dejará de aparecer al registrar cortes, pero los cortes existentes se conservan.</span>
+            <form th:action="@{/referencias/{id}/desactivar(id=${ofrecerDesactivar})}" method="post" class="ms-auto">
+                <button type="submit" class="btn btn-cobre"><i class="bi bi-slash-circle me-1"></i> Desactivar</button>
+            </form>
+        </div>
+
+        <div class="tarjeta">
+            <form th:action="@{/referencias}" method="get" class="row g-2 align-items-end mb-3">
+                <div class="col-12 col-md-6">
+                    <label for="q" class="form-label">Buscar</label>
+                    <div class="input-group">
+                        <span class="input-group-text"><i class="bi bi-search"></i></span>
+                        <input type="search" id="q" name="q" th:value="${q}" class="form-control" placeholder="Código o descripción">
+                    </div>
+                </div>
+                <div class="col-6 col-md-3">
+                    <label for="activa" class="form-label">Estado</label>
+                    <select id="activa" name="activa" class="form-select" data-autoenviar>
+                        <option value="">Todas</option>
+                        <option value="true" th:selected="${activa == true}">Activas</option>
+                        <option value="false" th:selected="${activa == false}">Inactivas</option>
+                    </select>
+                </div>
+                <div class="col-6 col-md-3 d-grid">
+                    <button type="submit" class="btn btn-outline-indigo">Filtrar</button>
+                </div>
+            </form>
+
+            <div class="d-flex mb-3">
+                <a th:href="@{/referencias/nueva}" class="btn btn-primary btn-lg-movil ms-auto"><i class="bi bi-plus-lg me-1"></i> Nueva referencia</a>
+            </div>
+
+            <div th:if="${pagina.content.isEmpty()}" class="vacio">
+                <i class="bi bi-tags d-block mb-2"></i> No se encontraron referencias.
+            </div>
+            <div class="table-responsive" th:unless="${pagina.content.isEmpty()}">
+                <table class="table table-hover tabla-judisa">
+                    <thead><tr><th>Código</th><th class="d-none d-md-table-cell">Descripción</th><th class="text-end">Valor unitario</th><th>Estado</th><th></th></tr></thead>
+                    <tbody>
+                    <tr th:each="r : ${pagina.content}" th:classappend="${!r.activa} ? 'estado-inactivo'">
+                        <td class="fw-semibold" th:text="${r.codigo}"></td>
+                        <td class="d-none d-md-table-cell" th:text="${r.descripcion}"></td>
+                        <td class="text-end" th:text="${@fmt.cop(r.valorUnitario)}"></td>
+                        <td>
+                            <span th:if="${r.activa}" class="badge text-bg-success">Activa</span>
+                            <span th:unless="${r.activa}" class="badge text-bg-secondary">Inactiva</span>
+                        </td>
+                        <td class="acciones">
+                            <a th:href="@{/referencias/{id}/editar(id=${r.id})}" class="btn btn-sm btn-outline-indigo" title="Editar"><i class="bi bi-pencil"></i></a>
+                            <form th:unless="${r.activa}" th:action="@{/referencias/{id}/activar(id=${r.id})}" method="post" class="d-inline">
+                                <button type="submit" class="btn btn-sm btn-outline-success" title="Activar"><i class="bi bi-check-circle"></i></button>
+                            </form>
+                            <button type="button" class="btn btn-sm btn-outline-danger" title="Eliminar"
+                                    data-bs-toggle="modal" data-bs-target="#modalConfirmar"
+                                    th:attr="data-accion=@{/referencias/{id}/eliminar(id=${r.id})},data-mensaje=|¿Eliminar la referencia ${r.codigo}?|">
+                                <i class="bi bi-trash"></i>
+                            </button>
+                        </td>
+                    </tr>
+                    </tbody>
+                </table>
+            </div>
+            <nav th:replace="~{fragments/layout :: paginacion(${pagina})}"></nav>
+        </div>
+    </main>
+</div>
+<div th:replace="~{fragments/layout :: modalConfirmar}"></div>
+<th:block th:replace="~{fragments/layout :: scripts}"></th:block>
+</body>
+</html>

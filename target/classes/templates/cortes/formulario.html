@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/layout :: head(${corteId == null} ? 'Registrar corte' : 'Editar corte')}"></head>
+<body>
+<div class="app">
+    <aside th:replace="~{fragments/layout :: sidebar}"></aside>
+    <main class="contenido">
+        <header th:replace="~{fragments/layout :: topbar(${corteId == null} ? 'Registrar corte' : 'Editar corte')}"></header>
+
+        <div class="tarjeta" style="max-width: 760px">
+            <div th:if="${empleados.isEmpty() or referencias.isEmpty()}" class="alert alert-info">
+                Para registrar un corte necesita al menos un empleado activo y una referencia activa.
+                <a th:href="@{/empleados/nuevo}">Crear empleado</a> · <a th:href="@{/referencias/nueva}">Crear referencia</a>
+            </div>
+
+            <!-- RF-19, RF-20, RF-23, RF-24, RF-28 -->
+            <form th:action="${corteId == null} ? @{/cortes} : @{/cortes/{id}(id=${corteId})}"
+                  th:object="${form}" method="post" novalidate data-un-envio>
+                <div th:if="${#fields.hasGlobalErrors()}" class="alert alert-danger">
+                    <p class="mb-0" th:each="err : ${#fields.globalErrors()}" th:text="${err}"></p>
+                </div>
+                <div class="row g-3">
+                    <div class="col-md-6">
+                        <label for="referenciaId" class="form-label">Referencia *</label>
+                        <select th:field="*{referenciaId}" class="form-select form-select-lg" th:errorclass="is-invalid" required>
+                            <option value="">Seleccione…</option>
+                            <option th:each="r : ${referencias}" th:value="${r.id}"
+                                    th:text="|${r.codigo} · ${r.descripcion}${r.activa ? '' : ' (inactiva)'}|"></option>
+                        </select>
+                        <div class="invalid-feedback" th:errors="*{referenciaId}"></div>
+                    </div>
+                    <div class="col-md-6">
+                        <label for="empleadoId" class="form-label">Empleado responsable *</label>
+                        <select th:field="*{empleadoId}" class="form-select form-select-lg" th:errorclass="is-invalid" required>
+                            <option value="">Seleccione…</option>
+                            <option th:each="e : ${empleados}" th:value="${e.id}"
+                                    th:text="|${e.nombre} · ${e.tipoTrabajoNombre}${e.activo ? '' : ' (inactivo)'}|"></option>
+                        </select>
+                        <div class="invalid-feedback" th:errors="*{empleadoId}"></div>
+                    </div>
+                    <div class="col-md-6">
+                        <label for="cantidad" class="form-label">Cantidad de piezas *</label>
+                        <input type="number" th:field="*{cantidad}" class="form-control form-control-lg"
+                               th:errorclass="is-invalid" min="1" max="100000" step="1" inputmode="numeric" required>
+                        <div class="invalid-feedback" th:errors="*{cantidad}"></div>
+                    </div>
+                    <div class="col-md-6">
+                        <label for="fecha" class="form-label">Fecha *</label>
+                        <input type="date" th:field="*{fecha}" th:max="${hoy}" class="form-control form-control-lg"
+                               th:errorclass="is-invalid" required>
+                        <div class="invalid-feedback" th:errors="*{fecha}"></div>
+                    </div>
+                    <div class="col-12">
+                        <label for="observaciones" class="form-label">Observaciones</label>
+                        <textarea th:field="*{observaciones}" class="form-control" rows="3" maxlength="500"
+                                  th:errorclass="is-invalid" placeholder="Opcional: defectos de tela, urgencias, etc."></textarea>
+                        <div class="invalid-feedback" th:errors="*{observaciones}"></div>
+                    </div>
+                </div>
+                <div class="d-flex flex-wrap gap-2 mt-4">
+                    <button type="submit" class="btn btn-primary btn-lg"><i class="bi bi-check2 me-1"></i> Guardar</button>
+                    <a th:href="@{/cortes}" class="btn btn-outline-secondary btn-lg">Cancelar</a>
+                </div>
+            </form>
+        </div>
+    </main>
+</div>
+<th:block th:replace="~{fragments/layout :: scripts}"></th:block>
+</body>
+</html>

@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/layout :: head('Cortes')}"></head>
+<body>
+<div class="app">
+    <aside th:replace="~{fragments/layout :: sidebar}"></aside>
+    <main class="contenido">
+        <header th:replace="~{fragments/layout :: topbar('Cortes de producción')}"></header>
+        <div th:replace="~{fragments/layout :: alertas}"></div>
+
+        <div class="tarjeta mb-3">
+            <!-- RF-22 filtros por empleado, referencia y fechas; RF-26 búsqueda por referencia -->
+            <form th:action="@{/cortes}" method="get" class="row g-2 align-items-end">
+                <input type="hidden" name="sort" th:value="${ascendente} ? 'fecha,asc' : 'fecha,desc'">
+                <div class="col-12 col-md-4 col-xl-3">
+                    <label for="empleadoId" class="form-label">Empleado</label>
+                    <select id="empleadoId" name="empleadoId" class="form-select">
+                        <option value="">Todos</option>
+                        <option th:each="e : ${empleados}" th:value="${e.id}" th:selected="${e.id == empleadoId}"
+                                th:text="${e.activo} ? ${e.nombre} : |${e.nombre} (inactivo)|"></option>
+                    </select>
+                </div>
+                <div class="col-12 col-md-3 col-xl-3">
+                    <label for="referencia" class="form-label">Referencia</label>
+                    <input type="search" id="referencia" name="referencia" th:value="${referencia}"
+                           class="form-control" placeholder="Ej. REF-2045">
+                </div>
+                <div class="col-6 col-md-2">
+                    <label for="desde" class="form-label">Desde</label>
+                    <input type="date" id="desde" name="desde" th:value="${desde}" class="form-control">
+                </div>
+                <div class="col-6 col-md-2">
+                    <label for="hasta" class="form-label">Hasta</label>
+                    <input type="date" id="hasta" name="hasta" th:value="${hasta}" class="form-control">
+                </div>
+                <div class="col-12 col-md-1 col-xl-2 d-flex gap-2">
+                    <button type="submit" class="btn btn-outline-indigo flex-fill" title="Filtrar"><i class="bi bi-funnel"></i><span class="d-md-none d-xl-inline"> Filtrar</span></button>
+                    <a th:href="@{/cortes}" class="btn btn-outline-secondary" title="Limpiar filtros"><i class="bi bi-x-lg"></i></a>
+                </div>
+            </form>
+        </div>
+
+        <div class="row g-3 mb-3" th:if="${total != null}">
+            <!-- RF-27: total de piezas del empleado/periodo filtrado -->
+            <div class="col-md-6">
+                <div class="tarjeta indicador tarjeta-costura">
+                    <div class="icono cobre"><i class="bi bi-boxes"></i></div>
+                    <div>
+                        <div class="valor" th:text="${@fmt.numero(total.totalPiezas)}">0</div>
+                        <div class="etiqueta">
+                            Piezas cortadas en <span th:text="${total.totalCortes}">0</span> cortes
+                            <span th:if="${total.empleadoNombre}" th:text="|por ${total.empleadoNombre}|"></span>
+                            <span th:if="${total.desde != null or total.hasta != null}"
+                                  th:text="|(${total.desde != null ? @fmt.fecha(total.desde) : 'inicio'} – ${total.hasta != null ? @fmt.fecha(total.hasta) : 'hoy'})|"></span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-6 d-flex align-items-center justify-content-md-end">
+                <a th:href="@{/cortes/nuevo(empleadoId=${empleadoId})}" class="btn btn-primary btn-lg"><i class="bi bi-plus-lg me-1"></i> Registrar corte</a>
+            </div>
+        </div>
+
+        <div class="tarjeta" th:if="${pagina != null}">
+            <div th:if="${pagina.content.isEmpty()}" class="vacio">
+                <i class="bi bi-scissors d-block mb-2"></i> No hay cortes con esos filtros.
+            </div>
+            <div class="table-responsive" th:unless="${pagina.content.isEmpty()}">
+                <table class="table table-hover tabla-judisa">
+                    <thead>
+                    <tr>
+                        <!-- RF-25: ordenar por fecha -->
+                        <th><a class="text-reset text-decoration-none"
+                               th:href="${enlaces.con('sort', ascendente ? 'fecha,desc' : 'fecha,asc')}"
+                               th:title="${ascendente} ? 'Ordenar de más reciente a más antigua' : 'Ordenar de más antigua a más reciente'">
+                            Fecha <i class="bi" th:classappend="${ascendente} ? 'bi-sort-up' : 'bi-sort-down'"></i></a></th>
+                        <th>Referencia</th><th>Empleado</th><th class="text-end">Piezas</th><th class="d-none d-lg-table-cell">Observaciones</th><th></th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    <tr th:each="c : ${pagina.content}">
+                        <td th:text="${@fmt.fecha(c.fecha)}"></td>
+                        <td><span class="fw-semibold" th:text="${c.referenciaCodigo}"></span>
+                            <small class="text-muted d-none d-md-block" th:text="${c.referenciaDescripcion}"></small></td>
+                        <td><a th:href="@{/empleados/{id}(id=${c.empleadoId})}" th:text="${c.empleadoNombre}"></a></td>
+                        <td class="text-end fw-semibold" th:text="${@fmt.numero(c.cantidad)}"></td>
+                        <td class="text-truncate d-none d-lg-table-cell" style="max-width: 220px" th:text="${c.observaciones}" th:title="${c.observaciones}"></td>
+                        <td class="acciones">
+                            <a th:href="@{/cortes/{id}/editar(id=${c.id})}" class="btn btn-sm btn-outline-indigo" title="Editar"><i class="bi bi-pencil"></i></a>
+                            <button type="button" class="btn btn-sm btn-outline-danger" title="Eliminar"
+                                    data-bs-toggle="modal" data-bs-target="#modalConfirmar"
+                                    th:attr="data-accion=@{/cortes/{id}/eliminar(id=${c.id})},data-mensaje=|¿Eliminar el corte de ${c.cantidad} piezas de ${c.referenciaCodigo} del ${#temporals.format(c.fecha, 'dd/MM/yyyy')}?|">
+                                <i class="bi bi-trash"></i>
+                            </button>
+                        </td>
+                    </tr>
+                    </tbody>
+                </table>
+            </div>
+            <nav th:replace="~{fragments/layout :: paginacion(${pagina})}"></nav>
+        </div>
+    </main>
+</div>
+<div th:replace="~{fragments/layout :: modalConfirmar}"></div>
+<th:block th:replace="~{fragments/layout :: scripts}"></th:block>
+</body>
+</html>

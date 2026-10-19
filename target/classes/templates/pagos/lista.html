@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/layout :: head('Pagos')}"></head>
+<body>
+<div class="app">
+    <aside th:replace="~{fragments/layout :: sidebar}"></aside>
+    <main class="contenido">
+        <header th:replace="~{fragments/layout :: topbar('Pagos a empleados')}"></header>
+        <div th:replace="~{fragments/layout :: alertas}"></div>
+
+        <div class="tarjeta mb-3">
+            <!-- RF-33: filtros por empleado, estado y fechas -->
+            <form th:action="@{/pagos}" method="get" class="row g-2 align-items-end">
+                <input type="hidden" name="sort" th:value="${ascendente} ? 'fecha,asc' : 'fecha,desc'">
+                <div class="col-12 col-md-4 col-xl-3">
+                    <label for="empleadoId" class="form-label">Empleado</label>
+                    <select id="empleadoId" name="empleadoId" class="form-select" data-autoenviar>
+                        <option value="">Todos</option>
+                        <option th:each="e : ${empleados}" th:value="${e.id}" th:selected="${e.id == empleadoId}"
+                                th:text="${e.activo} ? ${e.nombre} : |${e.nombre} (inactivo)|"></option>
+                    </select>
+                </div>
+                <div class="col-12 col-md-2">
+                    <label for="estado" class="form-label">Estado</label>
+                    <select id="estado" name="estado" class="form-select" data-autoenviar>
+                        <option value="">Todos</option>
+                        <option th:each="s : ${estados}" th:value="${s}" th:selected="${s == estado}" th:text="${s.nombre}"></option>
+                    </select>
+                </div>
+                <div class="col-6 col-md-2">
+                    <label for="desde" class="form-label">Desde</label>
+                    <input type="date" id="desde" name="desde" th:value="${desde}" class="form-control">
+                </div>
+                <div class="col-6 col-md-2">
+                    <label for="hasta" class="form-label">Hasta</label>
+                    <input type="date" id="hasta" name="hasta" th:value="${hasta}" class="form-control">
+                </div>
+                <div class="col-12 col-md-2 col-xl-3 d-flex gap-2">
+                    <button type="submit" class="btn btn-outline-indigo flex-fill" title="Filtrar"><i class="bi bi-funnel"></i> Filtrar</button>
+                    <a th:href="@{/pagos}" class="btn btn-outline-secondary" title="Limpiar filtros"><i class="bi bi-x-lg"></i></a>
+                </div>
+            </form>
+        </div>
+
+        <!-- RF-37: totales del periodo filtrado -->
+        <div class="row g-3 mb-3" th:if="${total != null}">
+            <div class="col-sm-6 col-xl-3">
+                <div class="tarjeta indicador">
+                    <div class="icono"><i class="bi bi-check2-circle"></i></div>
+                    <div><div class="valor" th:text="${@fmt.cop(total.totalPagado)}">$ 0</div>
+                        <div class="etiqueta">Pagado (<span th:text="${@fmt.numero(total.piezasPagadas)}">0</span> piezas)</div></div>
+                </div>
+            </div>
+            <div class="col-sm-6 col-xl-3">
+                <div class="tarjeta indicador">
+                    <div class="icono cobre"><i class="bi bi-hourglass-split"></i></div>
+                    <div><div class="valor" th:text="${@fmt.cop(total.totalPendiente)}">$ 0</div>
+                        <div class="etiqueta">Pendiente (<span th:text="${@fmt.numero(total.piezasPendientes)}">0</span> piezas)</div></div>
+                </div>
+            </div>
+            <!-- RF-39: saldo pendiente del empleado elegido -->
+            <div class="col-sm-6 col-xl-3" th:if="${saldo != null}">
+                <div class="tarjeta indicador tarjeta-costura">
+                    <div class="icono cobre"><i class="bi bi-wallet2"></i></div>
+                    <div><div class="valor" th:text="${@fmt.cop(saldo.saldoPendiente)}">$ 0</div>
+                        <div class="etiqueta">Saldo por pagar ·
+                            <span th:text="${@fmt.numero(saldo.piezasSaldo)}">0</span> de
+                            <span th:text="${@fmt.numero(saldo.piezasCortadas)}">0</span> piezas sin pagar</div></div>
+                </div>
+            </div>
+            <div class="col d-flex align-items-center justify-content-xl-end">
+                <a th:href="@{/pagos/nuevo(empleadoId=${empleadoId})}" class="btn btn-cobre btn-lg"><i class="bi bi-plus-lg me-1"></i> Registrar pago</a>
+            </div>
+        </div>
+        <p class="text-muted small" th:if="${saldo != null}">
+            El saldo compara lo producido (piezas cortadas × valor unitario de la referencia:
+            <span th:text="${@fmt.cop(saldo.valorProducido)}"></span>) con lo ya pagado
+            (<span th:text="${@fmt.cop(saldo.totalPagado)}"></span>). Los pagos pendientes aún cuentan como deuda.
+        </p>
+
+        <div class="tarjeta" th:if="${pagina != null}">
+            <div th:if="${pagina.content.isEmpty()}" class="vacio">
+                <i class="bi bi-cash-coin d-block mb-2"></i> No hay pagos con esos filtros.
+            </div>
+            <div class="table-responsive" th:unless="${pagina.content.isEmpty()}">
+                <table class="table table-hover tabla-judisa">
+                    <thead>
+                    <tr>
+                        <th><a class="text-reset text-decoration-none"
+                               th:href="${enlaces.con('sort', ascendente ? 'fecha,desc' : 'fecha,asc')}"
+                               th:title="${ascendente} ? 'Ordenar de más reciente a más antigua' : 'Ordenar de más antigua a más reciente'">
+                            Fecha <i class="bi" th:classappend="${ascendente} ? 'bi-sort-up' : 'bi-sort-down'"></i></a></th>
+                        <th>Empleado</th><th class="text-end">Piezas</th><th class="text-end d-none d-md-table-cell">Valor unitario</th>
+                        <th class="text-end">Total</th><th>Estado</th><th class="d-none d-lg-table-cell">Nota</th><th></th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    <tr th:each="p : ${pagina.content}">
+                        <td th:text="${@fmt.fecha(p.fecha)}"></td>
+                        <td><a th:href="@{/empleados/{id}(id=${p.empleadoId})}" th:text="${p.empleadoNombre}"></a></td>
+                        <td class="text-end" th:text="${@fmt.numero(p.piezas)}"></td>
+                        <td class="text-end d-none d-md-table-cell" th:text="${@fmt.cop(p.valorUnitario)}"></td>
+                        <td class="text-end fw-semibold" th:text="${@fmt.cop(p.total)}"></td>
+                        <td>
+                            <!-- RF-38: cambiar estado con un clic -->
+                            <form th:action="@{/pagos/{id}/estado(id=${p.id})}" method="post" class="d-inline">
+                                <input type="hidden" name="estado" th:value="${p.estado.name() == 'REALIZADO'} ? 'PENDIENTE' : 'REALIZADO'">
+                                <input type="hidden" name="volver" th:value="${enlaces.actual()}">
+                                <button type="submit" class="badge border-0" th:classappend="${p.estado.name() == 'REALIZADO'} ? 'text-bg-success' : 'text-bg-warning'"
+                                        th:title="${p.estado.name() == 'REALIZADO'} ? 'Marcar como pendiente' : 'Marcar como realizado hoy'">
+                                    <i class="bi" th:classappend="${p.estado.name() == 'REALIZADO'} ? 'bi-check2' : 'bi-hourglass'"></i>
+                                    <span th:text="${p.estadoNombre}"></span>
+                                </button>
+                            </form>
+                            <small class="d-block text-muted" th:if="${p.fechaPagoEfectivo}" th:text="|Pagado ${@fmt.fecha(p.fechaPagoEfectivo)}|"></small>
+                        </td>
+                        <td class="text-truncate d-none d-lg-table-cell" style="max-width: 200px" th:text="${p.nota}" th:title="${p.nota}"></td>
+                        <td class="acciones">
+                            <a th:href="@{/pagos/{id}/editar(id=${p.id})}" class="btn btn-sm btn-outline-indigo" title="Editar"><i class="bi bi-pencil"></i></a>
+                            <button type="button" class="btn btn-sm btn-outline-danger" title="Eliminar"
+                                    data-bs-toggle="modal" data-bs-target="#modalConfirmar"
+                                    th:attr="data-accion=@{/pagos/{id}/eliminar(id=${p.id})},data-mensaje=|¿Eliminar el pago de ${p.empleadoNombre} del ${#temporals.format(p.fecha, 'dd/MM/yyyy')}?|">
+                                <i class="bi bi-trash"></i>
+                            </button>
+                        </td>
+                    </tr>
+                    </tbody>
+                </table>
+            </div>
+            <nav th:replace="~{fragments/layout :: paginacion(${pagina})}"></nav>
+        </div>
+    </main>
+</div>
+<div th:replace="~{fragments/layout :: modalConfirmar}"></div>
+<th:block th:replace="~{fragments/layout :: scripts}"></th:block>
+</body>
+</html>

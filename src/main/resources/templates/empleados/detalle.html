@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/layout :: head(${detalle.empleado.nombre})}"></head>
+<body>
+<div class="app" th:with="e=${detalle.empleado}">
+    <aside th:replace="~{fragments/layout :: sidebar}"></aside>
+    <main class="contenido">
+        <header th:replace="~{fragments/layout :: topbar(${detalle.empleado.nombre})}"></header>
+        <div th:replace="~{fragments/layout :: alertas}"></div>
+
+        <!-- RF-14: si no se pudo eliminar, se ofrece desactivar -->
+        <div th:if="${ofrecerDesactivar != null and e.activo}" class="alert alert-warning d-flex flex-wrap align-items-center gap-2">
+            <span>¿Desea desactivarlo? Dejará de aparecer al registrar cortes, pero su historial se conserva.</span>
+            <form th:action="@{/empleados/{id}/desactivar(id=${e.id})}" method="post" class="ms-auto">
+                <button type="submit" class="btn btn-cobre"><i class="bi bi-person-slash me-1"></i> Desactivar</button>
+            </form>
+        </div>
+
+        <div class="row g-3 mb-3">
+            <div class="col-lg-5">
+                <div class="tarjeta h-100">
+                    <div class="d-flex align-items-start mb-3">
+                        <h2 class="h5 mb-0">Datos del empleado</h2>
+                        <span th:if="${e.activo}" class="badge text-bg-success ms-auto">Activo</span>
+                        <span th:unless="${e.activo}" class="badge text-bg-secondary ms-auto">Inactivo</span>
+                    </div>
+                    <dl class="row mb-3">
+                        <dt class="col-5">Documento</dt><dd class="col-7" th:text="${e.documento}"></dd>
+                        <dt class="col-5">Teléfono</dt><dd class="col-7" th:text="${e.telefono}"></dd>
+                        <dt class="col-5">Tipo de trabajo</dt><dd class="col-7" th:text="${e.tipoTrabajoNombre}"></dd>
+                        <dt class="col-5">Registrado</dt><dd class="col-7" th:text="${@fmt.fechaHora(e.createdAt)}"></dd>
+                    </dl>
+                    <div class="d-flex flex-wrap gap-2">
+                        <a th:href="@{/empleados/{id}/editar(id=${e.id})}" class="btn btn-outline-indigo"><i class="bi bi-pencil me-1"></i> Editar</a>
+                        <a th:if="${e.activo}" th:href="@{/cortes/nuevo(empleadoId=${e.id})}" class="btn btn-primary"><i class="bi bi-scissors me-1"></i> Registrar corte</a>
+                        <a th:if="${e.activo}" th:href="@{/pagos/nuevo(empleadoId=${e.id})}" class="btn btn-cobre"><i class="bi bi-cash-coin me-1"></i> Registrar pago</a>
+                        <a th:href="@{/pagos(empleadoId=${e.id})}" class="btn btn-outline-indigo"><i class="bi bi-wallet2 me-1"></i> Saldo y pagos</a>
+                        <form th:unless="${e.activo}" th:action="@{/empleados/{id}/activar(id=${e.id})}" method="post">
+                            <button type="submit" class="btn btn-outline-success"><i class="bi bi-person-check me-1"></i> Activar</button>
+                        </form>
+                        <button th:if="${e.activo}" type="button" class="btn btn-outline-secondary"
+                                data-bs-toggle="modal" data-bs-target="#modalConfirmar" data-boton="Desactivar" data-estilo="btn-cobre"
+                                th:attr="data-accion=@{/empleados/{id}/desactivar(id=${e.id})},data-mensaje=|¿Desactivar a ${e.nombre}? Su historial se conserva.|">
+                            <i class="bi bi-person-slash me-1"></i> Desactivar
+                        </button>
+                        <button type="button" class="btn btn-outline-danger"
+                                data-bs-toggle="modal" data-bs-target="#modalConfirmar"
+                                th:attr="data-accion=@{/empleados/{id}/eliminar(id=${e.id})},data-mensaje=|¿Eliminar al empleado ${e.nombre}? Esta acción no se puede deshacer.|">
+                            <i class="bi bi-trash me-1"></i> Eliminar
+                        </button>
+                    </div>
+                </div>
+            </div>
+            <div class="col-lg-7">
+                <div class="row g-3">
+                    <div class="col-6">
+                        <div class="tarjeta indicador"><div class="icono"><i class="bi bi-scissors"></i></div>
+                            <div><div class="valor" th:text="${@fmt.numero(detalle.totalCortes)}"></div><div class="etiqueta">Cortes</div></div></div>
+                    </div>
+                    <div class="col-6">
+                        <div class="tarjeta indicador"><div class="icono"><i class="bi bi-boxes"></i></div>
+                            <div><div class="valor" th:text="${@fmt.numero(detalle.totalPiezas)}"></div><div class="etiqueta">Piezas cortadas</div></div></div>
+                    </div>
+                    <div class="col-6">
+                        <div class="tarjeta indicador"><div class="icono cobre"><i class="bi bi-receipt"></i></div>
+                            <div><div class="valor" th:text="${@fmt.numero(detalle.totalPagos)}"></div><div class="etiqueta">Pagos</div></div></div>
+                    </div>
+                    <div class="col-6">
+                        <div class="tarjeta indicador"><div class="icono cobre"><i class="bi bi-cash-coin"></i></div>
+                            <div><div class="valor fs-5" th:text="${@fmt.cop(detalle.totalPagado)}"></div><div class="etiqueta">Total pagado</div></div></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- RF-17: historial de cortes y pagos -->
+        <div class="tarjeta">
+            <ul class="nav nav-tabs mb-3" role="tablist">
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link active" data-bs-toggle="tab" data-bs-target="#tabCortes" type="button" role="tab">
+                        Cortes <span class="badge text-bg-light" th:text="${detalle.cortes.size()}"></span></button>
+                </li>
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link" data-bs-toggle="tab" data-bs-target="#tabPagos" type="button" role="tab">
+                        Pagos <span class="badge text-bg-light" th:text="${detalle.pagos.size()}"></span></button>
+                </li>
+            </ul>
+            <div class="tab-content">
+                <div class="tab-pane fade show active" id="tabCortes" role="tabpanel">
+                    <div th:if="${detalle.cortes.isEmpty()}" class="vacio">Sin cortes registrados.</div>
+                    <div class="table-responsive" th:unless="${detalle.cortes.isEmpty()}">
+                        <table class="table tabla-judisa">
+                            <thead><tr><th>Fecha</th><th>Referencia</th><th class="text-end">Piezas</th><th>Observaciones</th></tr></thead>
+                            <tbody>
+                            <tr th:each="c : ${detalle.cortes}">
+                                <td th:text="${@fmt.fecha(c.fecha)}"></td>
+                                <td><span th:text="${c.referenciaCodigo}" class="fw-semibold"></span>
+                                    <small class="text-muted d-block" th:text="${c.referenciaDescripcion}"></small></td>
+                                <td class="text-end" th:text="${@fmt.numero(c.cantidad)}"></td>
+                                <td th:text="${c.observaciones}"></td>
+                            </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                    <p class="text-muted small mb-0" th:if="${detalle.totalCortes > detalle.cortes.size()}">
+                        Se muestran los 50 cortes más recientes. <a th:href="@{/cortes(empleadoId=${e.id})}">Ver todos</a>
+                    </p>
+                </div>
+                <div class="tab-pane fade" id="tabPagos" role="tabpanel">
+                    <div th:if="${detalle.pagos.isEmpty()}" class="vacio">Sin pagos registrados.</div>
+                    <div class="table-responsive" th:unless="${detalle.pagos.isEmpty()}">
+                        <table class="table tabla-judisa">
+                            <thead><tr><th>Fecha</th><th class="text-end">Piezas</th><th class="text-end">Valor unitario</th>
+                                <th class="text-end">Total</th><th>Estado</th><th>Nota</th></tr></thead>
+                            <tbody>
+                            <tr th:each="p : ${detalle.pagos}">
+                                <td th:text="${@fmt.fecha(p.fecha)}"></td>
+                                <td class="text-end" th:text="${@fmt.numero(p.piezas)}"></td>
+                                <td class="text-end" th:text="${@fmt.cop(p.valorUnitario)}"></td>
+                                <td class="text-end fw-semibold" th:text="${@fmt.cop(p.total)}"></td>
+                                <td><span class="badge" th:classappend="${p.estado.name() == 'REALIZADO'} ? 'text-bg-success' : 'text-bg-warning'"
+                                          th:text="${p.estado.nombre}"></span></td>
+                                <td th:text="${p.nota}"></td>
+                            </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+</div>
+<div th:replace="~{fragments/layout :: modalConfirmar}"></div>
+<th:block th:replace="~{fragments/layout :: scripts}"></th:block>
+</body>
+</html>

@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/layout :: head(${referenciaId == null} ? 'Nueva referencia' : 'Editar referencia')}"></head>
+<body>
+<div class="app">
+    <aside th:replace="~{fragments/layout :: sidebar}"></aside>
+    <main class="contenido">
+        <header th:replace="~{fragments/layout :: topbar(${referenciaId == null} ? 'Nueva referencia' : 'Editar referencia')}"></header>
+
+        <div class="tarjeta" style="max-width: 720px">
+            <form th:action="${referenciaId == null} ? @{/referencias} : @{/referencias/{id}(id=${referenciaId})}"
+                  th:object="${form}" method="post" novalidate data-un-envio>
+                <div class="row g-3">
+                    <div class="col-md-5">
+                        <label for="codigo" class="form-label">Código *</label>
+                        <input type="text" th:field="*{codigo}" class="form-control form-control-lg text-uppercase"
+                               th:errorclass="is-invalid" placeholder="REF-2045" maxlength="30" required>
+                        <div class="invalid-feedback" th:errors="*{codigo}"></div>
+                    </div>
+                    <div class="col-md-7">
+                        <label for="valorUnitario" class="form-label">Valor unitario sugerido (COP) *</label>
+                        <div class="input-group input-group-lg has-validation">
+                            <span class="input-group-text">$</span>
+                            <input type="number" th:field="*{valorUnitario}" class="form-control"
+                                   th:errorclass="is-invalid" min="1" step="1" inputmode="numeric" required>
+                            <div class="invalid-feedback" th:errors="*{valorUnitario}"></div>
+                        </div>
+                        <div class="form-text">Lo que se paga por pieza de esta referencia. Se sugerirá al registrar pagos.</div>
+                    </div>
+                    <div class="col-12">
+                        <label for="descripcion" class="form-label">Descripción *</label>
+                        <input type="text" th:field="*{descripcion}" class="form-control form-control-lg"
+                               th:errorclass="is-invalid" maxlength="200" placeholder="Jean dama skinny tiro alto" required>
+                        <div class="invalid-feedback" th:errors="*{descripcion}"></div>
+                    </div>
+                </div>
+                <div class="d-flex flex-wrap gap-2 mt-4">
+                    <button type="submit" class="btn btn-primary btn-lg"><i class="bi bi-check2 me-1"></i> Guardar</button>
+                    <a th:href="@{/referencias}" class="btn btn-outline-secondary btn-lg">Cancelar</a>
+                </div>
+            </form>
+        </div>
+    </main>
+</div>
+<th:block th:replace="~{fragments/layout :: scripts}"></th:block>
+</body>
+</html>
